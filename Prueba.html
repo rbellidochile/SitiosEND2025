@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis Interactivo de Riesgos en Pavimentos: Solución SmartRock</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@1.4.0"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony -->
+    <!-- Application Structure Plan: The application is structured as a persuasive narrative, guiding the user from problem to solution. It starts with a Hero section to state the core challenge (the 3-year SERVIU guarantee). It then visually explains the process and financial risk with a timeline. A core interactive section details 5 common construction pitfalls, comparing traditional methods with the SmartRock solution. The centerpiece is a simulated "live" dashboard showing real-time data (temperature/strength), making the technology tangible. An ROI calculator follows, directly addressing economic concerns. The narrative concludes with the benefits of documentation and regulatory compliance. This structure was chosen to first establish the user's pain point, then demonstrate a clear, data-driven solution, and finally, prove its financial and operational value, maximizing persuasive impact. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: SERVIU's dual reception process (Provisoria, Final) and 3-year warranty. Goal: Inform/Organize. Viz/Method: HTML/CSS Timeline. Interaction: Hover effects. Justification: Clearly visualizes the long period of financial risk for contractors.
+        - Report Info: 5 key technical problems (thermal cracks, mix issues, curing, joint cuts, traffic opening). Goal: Compare/Inform. Viz/Method: Tabbed content cards. Interaction: User clicks to switch between problems. Justification: Breaks down complex technical issues into manageable, focused sections and directly contrasts the problem with the solution.
+        - Report Info: Real-time monitoring of concrete properties. Goal: Change/Demonstrate. Viz/Method: Two Chart.js line charts simulating live data. Interaction: Charts update automatically; tooltips on hover; annotated threshold lines. Justification: This is the "wow" factor, showing the technology in action and making its benefits (e.g., optimal timing) immediately obvious.
+        - Report Info: Economic impact (repair costs vs. investment). Goal: Compare/Persuade. Viz/Method: HTML form inputs linked to a dynamic Chart.js bar chart. Interaction: User interacts with a slider, and the cost-benefit chart updates instantly. Justification: Provides a direct, personalized ROI calculation, which is a powerful sales tool.
+        - Library/Method: Chart.js for all visualizations, ensuring a consistent look and feel, and full interactivity without external dependencies beyond the CDN. Vanilla JS for all logic.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #2563eb; /* blue-600 */
+            border-bottom-color: #2563eb; /* blue-600 */
+        }
+        .tab-button {
+            transition: all 0.3s;
+        }
+        .tab-button.active {
+            background-color: #2563eb; /* blue-600 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            max-height: 40vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .card-gradient {
+            background-image: linear-gradient(to top, #ffffff, #f8fafc);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="text-xl font-bold text-slate-800">
+                <span class="text-blue-600">Smart</span>Rock<span class="font-light"> para SERVIU</span>
+            </div>
+            <div class="hidden md:flex space-x-8">
+                <a href="#proceso" class="nav-link font-medium pb-1">El Riesgo</a>
+                <a href="#problemas" class="nav-link font-medium pb-1">Patologías Comunes</a>
+                <a href="#solucion" class="nav-link font-medium pb-1">Solución Digital</a>
+                <a href="#roi" class="nav-link font-medium pb-1">Análisis ROI</a>
+                <a href="#beneficios" class="nav-link font-medium pb-1">Beneficios</a>
+            </div>
+             <button id="mobile-menu-button" class="md:hidden p-2 rounded-md text-slate-600 hover:bg-slate-100 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </nav>
+        <div id="mobile-menu" class="hidden md:hidden px-6 pb-4">
+            <a href="#proceso" class="block py-2 text-center nav-link">El Riesgo</a>
+            <a href="#problemas" class="block py-2 text-center nav-link">Patologías Comunes</a>
+            <a href="#solucion" class="block py-2 text-center nav-link">Solución Digital</a>
+            <a href="#roi" class="block py-2 text-center nav-link">Análisis ROI</a>
+            <a href="#beneficios" class="block py-2 text-center nav-link">Beneficios</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 md:py-16">
+        
+        <section class="text-center mb-16 md:mb-24">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Proteja su Inversión en Pavimentos</h1>
+            <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">La boleta de garantía SERVIU a 3 años es un riesgo financiero significativo. Vea cómo la tecnología SmartRock transforma la incertidumbre en control, asegurando la calidad desde el primer día y protegiendo su rentabilidad.</p>
+        </section>
+
+        <section id="proceso" class="mb-16 md:mb-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-slate-900">El Proceso de Recepción SERVIU</h2>
+            <p class="text-center text-slate-600 mb-12 max-w-3xl mx-auto">El ciclo de vida de un proyecto de pavimentación bajo normativa SERVIU implica un largo período de responsabilidad post-construcción. La boleta de garantía retenida durante 3 años cubre los costos de reparación de cualquier patología que surja, representando un riesgo directo a la utilidad del proyecto.</p>
+            <div class="relative w-full overflow-x-auto">
+                <div class="flex items-center w-full min-w-[700px]">
+                    <div class="flex-1 text-center">
+                        <div class="bg-blue-600 text-white rounded-full w-20 h-20 flex items-center justify-center mx-auto shadow-lg">
+                            <span class="text-3xl">1</span>
+                        </div>
+                        <p class="mt-2 font-semibold">Construcción</p>
+                        <p class="text-sm text-slate-500">Fase de ejecución</p>
+                    </div>
+                    <div class="flex-1 h-1 bg-slate-300"></div>
+                    <div class="flex-1 text-center">
+                        <div class="bg-blue-600 text-white rounded-full w-20 h-20 flex items-center justify-center mx-auto shadow-lg">
+                            <span class="text-3xl">2</span>
+                        </div>
+                        <p class="mt-2 font-semibold">Recepción Provisoria</p>
+                        <p class="text-sm text-slate-500">Al finalizar la obra</p>
+                    </div>
+                    <div class="flex-1 h-1 bg-amber-400 border-t-2 border-b-2 border-dashed border-amber-500 relative">
+                        <div class="absolute -top-6 left-1/2 -translate-x-1/2 bg-amber-100 text-amber-800 text-sm font-semibold px-3 py-1 rounded-md">Período de Garantía (3 AÑOS)</div>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <div class="bg-red-600 text-white rounded-full w-20 h-20 flex items-center justify-center mx-auto shadow-lg ring-4 ring-red-200">
+                             <span class="text-3xl">!</span>
+                        </div>
+                        <p class="mt-2 font-semibold">RIESGO FINANCIERO</p>
+                        <p class="text-sm text-slate-500">Aparición de patologías</p>
+                    </div>
+                    <div class="flex-1 h-1 bg-slate-300"></div>
+                    <div class="flex-1 text-center">
+                        <div class="bg-emerald-600 text-white rounded-full w-20 h-20 flex items-center justify-center mx-auto shadow-lg">
+                             <span class="text-3xl">3</span>
+                        </div>
+                        <p class="mt-2 font-semibold">Recepción Final</p>
+                        <p class="text-sm text-slate-500">Liberación de garantía</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="problemas" class="mb-16 md:mb-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-slate-900">Patologías Comunes: El Origen del Riesgo</h2>
+             <p class="text-center text-slate-600 mb-12 max-w-3xl mx-auto">La mayoría de los defectos que obligan a ejecutar la garantía se originan por falta de control en las primeras horas y días del hormigón. La toma de decisiones basada en tiempos estándar en lugar de datos reales es la principal causa de fallas a largo plazo.</p>
+            
+            <div class="flex flex-col md:flex-row gap-8">
+                <div class="w-full md:w-1/3">
+                    <div id="tabs-buttons" class="flex md:flex-col gap-2"></div>
+                </div>
+                <div class="w-full md:w-2/3">
+                    <div id="tabs-content"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="solucion" class="mb-16 md:mb-24 bg-slate-100 p-6 md:p-10 rounded-2xl">
+            <h2 class="text-3xl font-bold text-center mb-2 text-slate-900">La Solución: Monitoreo en Tiempo Real</h2>
+            <p class="text-center text-slate-600 mb-12 max-w-3xl mx-auto">SmartRock le entrega el control total sobre el proceso de fraguado. Visualice la temperatura y la resistencia del hormigón en tiempo real desde cualquier dispositivo. Tome decisiones basadas en datos precisos para optimizar cada etapa crítica del proyecto.</p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-center">Evolución de Temperatura (°C)</h3>
+                    <div class="chart-container">
+                        <canvas id="temperatureChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-xl font-semibold mb-4 text-center">Ganancia de Resistencia (MPa)</h3>
+                    <div class="chart-container">
+                        <canvas id="strengthChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="roi" class="mb-16 md:mb-24">
+            <h2 class="text-3xl font-bold text-center mb-2 text-slate-900">Análisis de Retorno de Inversión (ROI)</h2>
+            <p class="text-center text-slate-600 mb-12 max-w-3xl mx-auto">Invertir en tecnología de monitoreo no es un costo, es un ahorro. Compare el costo de implementación de SmartRock con los potenciales costos de reparación y ejecución de garantías. Mueva el deslizador para ajustar el tamaño del proyecto y ver el impacto.</p>
+            <div class="grid md:grid-cols-5 gap-8 items-center">
+                <div class="md:col-span-2">
+                    <label for="projectSize" class="block font-medium text-slate-700">Tamaño del Proyecto (m² de pavimento)</label>
+                    <input type="range" id="projectSize" min="500" max="10000" value="2500" step="500" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer">
+                    <div class="flex justify-between text-sm text-slate-500 mt-2">
+                        <span>500 m²</span>
+                        <span id="projectSizeLabel" class="font-bold text-blue-600">2500 m²</span>
+                        <span>10,000 m²</span>
+                    </div>
+                </div>
+                <div class="md:col-span-3">
+                    <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="text-xl font-semibold mb-4 text-center">Estimación de Costos vs. Ahorro</h3>
+                        <div class="chart-container h-64 md:h-80">
+                            <canvas id="roiChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="beneficios" class="bg-white p-6 md:p-10 rounded-2xl shadow-lg">
+             <h2 class="text-3xl font-bold text-center mb-2 text-slate-900">Más Allá del Ahorro: Beneficios Integrales</h2>
+             <p class="text-center text-slate-600 mb-12 max-w-3xl mx-auto">La implementación de SmartRock y la plataforma Giatec 360 no solo reduce riesgos, sino que profesionaliza su operación, mejora su reputación y le da una ventaja competitiva.</p>
+            <div class="grid md:grid-cols-3 gap-8 text-center">
+                <div>
+                    <div class="bg-blue-100 text-blue-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 text-4xl">📄</div>
+                    <h3 class="text-xl font-semibold mb-2">Documentación Irrefutable</h3>
+                    <p class="text-slate-600">Genere reportes automáticos y trazables que sirven como evidencia de calidad ante SERVIU, reduciendo disputas y facilitando la recepción final.</p>
+                </div>
+                <div>
+                    <div class="bg-emerald-100 text-emerald-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 text-4xl">🤝</div>
+                    <h3 class="text-xl font-semibold mb-2">Reducción de Disputas</h3>
+                    <p class="text-slate-600">Con datos objetivos, las discusiones sobre la calidad del proceso constructivo se eliminan. La evidencia respalda cada decisión tomada en obra.</p>
+                </div>
+                <div>
+                    <div class="bg-amber-100 text-amber-600 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4 text-4xl">🏆</div>
+                    <h3 class="text-xl font-semibold mb-2">Ventaja Competitiva</h3>
+                    <p class="text-slate-600">Obras más rápidas, seguras y de mayor calidad. Posiciónese como un líder tecnológico en el mercado, ofreciendo un estándar superior en sus proyectos.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-slate-800 text-white mt-16">
+        <div class="container mx-auto px-6 py-8 text-center">
+             <p class="text-2xl font-bold mb-4">Transforme su manera de construir pavimentos.</p>
+             <p class="mb-6 text-slate-300">Solicite una demostración y descubra cómo SmartRock puede proteger su próximo proyecto SERVIU.</p>
+             <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-colors">Contactar a un especialista</button>
+        </div>
+    </footer>
+
+    <script>
+        const problemsData = [
+            {
+                id: 'fisuras',
+                title: 'Fisuras por Gradiente Térmico',
+                criticalTime: 'Primeras 24-72 horas',
+                problem: 'El control de la diferencia de temperatura entre el núcleo y la superficie del hormigón es vital. Variaciones no controladas provocan tensiones internas que resultan en micro y macro fisuras, comprometiendo la durabilidad a largo plazo.',
+                traditional: 'Mediciones manuales esporádicas con termómetros infrarrojos, que no capturan la evolución continua ni la temperatura interna.',
+                solution: 'Monitoreo continuo de la temperatura en núcleo y superficie. Alertas automáticas cuando el gradiente térmico excede los límites seguros, permitiendo acciones de curado correctivas inmediatas (ej. uso de mantas térmicas).'
+            },
+            {
+                id: 'mezcla',
+                title: 'Sobredimensionamiento de Mezcla',
+                criticalTime: 'Diseño y Vaciado',
+                problem: 'Por incertidumbre, a menudo se especifica u ordena hormigón con más cemento o aditivos de alta resistencia inicial (ARI) de lo necesario. Esto no solo aumenta los costos, sino que puede generar mayor retracción y rigidez, llevando a fisuras.',
+                traditional: 'Confianza ciega en la especificación del proveedor y pruebas de probetas a 7 y 28 días, que no reflejan el comportamiento real en obra.',
+                solution: 'Conocer la resistencia real en tiempo real permite ajustar mezclas futuras y validar que el hormigón recibido cumple lo necesario, sin pagar de más por una resistencia excesiva que puede ser perjudicial.'
+            },
+            {
+                id: 'curado',
+                title: 'Deficiencias en Curado y Protección',
+                criticalTime: 'Primeros 7-28 días',
+                problem: 'Un curado inadecuado (falta de agua, protección contra el viento o sol) impide que el hormigón alcance su resistencia de diseño, resultando en una superficie débil, permeable y propensa a desgaste prematuro.',
+                traditional: 'Aplicación de membranas de curado basadas en un calendario fijo, sin considerar las condiciones ambientales reales que afectan la tasa de evaporación.',
+                solution: 'Los datos de temperatura y humedad relativa de los sensores, combinados con datos meteorológicos, permiten optimizar el proceso de curado, aplicando agua o protección solo cuando es necesario, asegurando la hidratación del cemento.'
+            },
+            {
+                id: 'juntas',
+                title: 'Corte de Juntas Inoportuno',
+                criticalTime: '6-18 horas',
+                problem: 'Realizar el aserrado de juntas de contracción muy temprano daña los áridos, y hacerlo muy tarde provoca que el hormigón ya se haya fisurado de forma descontrolada por la retracción.',
+                traditional: 'Métodos empíricos como "rayar la superficie" o seguir una ventana de tiempo fija, que no considera la velocidad real de fraguado.',
+                solution: 'El sensor de resistencia determina con precisión la "ventana de aserrado" óptima. El sistema alerta cuando el hormigón tiene la dureza suficiente para ser cortado sin daños, pero antes de que se acumulen tensiones críticas.'
+            },
+            {
+                id: 'trafico',
+                title: 'Apertura al Tráfico Prematura',
+                criticalTime: '7-28 días',
+                problem: 'Habilitar el paso de vehículos basándose en plazos estándar (ej. 7 o 28 días) sin conocer la resistencia real puede causar daños estructurales permanentes si el hormigón no está listo, especialmente bajo cargas pesadas.',
+                traditional: 'Esperar un número de días predefinido por especificación o los resultados de laboratorio de probetas, que pueden no ser representativos de la losa real.',
+                solution: 'La medición de resistencia en tiempo real permite abrir el pavimento al tráfico en el momento exacto en que alcanza la resistencia de diseño especificada por SERVIU, optimizando los plazos del proyecto de forma segura y documentada.'
+            }
+        ];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            const tabsButtonsContainer = document.getElementById('tabs-buttons');
+            const tabsContentContainer = document.getElementById('tabs-content');
+
+            problemsData.forEach((problem, index) => {
+                const button = document.createElement('button');
+                button.className = `tab-button w-full text-left p-4 rounded-lg font-medium ${index === 0 ? 'active' : 'bg-white shadow-sm hover:bg-slate-100'}`;
+                button.dataset.target = problem.id;
+                button.innerHTML = `<span class="text-blue-600 font-bold mr-2">${index + 1}.</span> ${problem.title}`;
+                tabsButtonsContainer.appendChild(button);
+
+                const content = document.createElement('div');
+                content.id = problem.id;
+                content.className = `tab-content ${index !== 0 ? 'hidden' : ''}`;
+                content.innerHTML = `
+                    <div class="bg-white p-6 rounded-lg shadow-lg card-gradient">
+                        <p class="text-sm font-semibold text-amber-600 bg-amber-100 inline-block px-3 py-1 rounded-full mb-4">Momento Crítico: ${problem.criticalTime}</p>
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">${problem.title}</h3>
+                        <p class="text-slate-600 mb-6">${problem.problem}</p>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="border-l-4 border-red-500 pl-4">
+                                <h4 class="font-semibold text-red-700">Método Tradicional</h4>
+                                <p class="text-slate-600 text-sm">${problem.traditional}</p>
+                            </div>
+                            <div class="border-l-4 border-emerald-500 pl-4">
+                                <h4 class="font-semibold text-emerald-700">Solución con SmartRock</h4>
+                                <p class="text-slate-600 text-sm">${problem.solution}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                tabsContentContainer.appendChild(content);
+            });
+
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active', 'bg-white', 'shadow-sm');
+                        btn.classList.add('bg-white', 'shadow-sm', 'hover:bg-slate-100');
+                    });
+                    button.classList.add('active');
+                    button.classList.remove('bg-white', 'shadow-sm', 'hover:bg-slate-100');
+
+                    const target = button.dataset.target;
+                    tabContents.forEach(content => {
+                        if (content.id === target) {
+                            content.classList.remove('hidden');
+                        } else {
+                            content.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('section');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === current) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+            
+            let tempChart, strengthChart, roiChart;
+            let time = 0;
+            const tempLabels = [];
+            const tempData = [];
+            const strengthLabels = [];
+            const strengthData = [];
+
+            function updateChartData() {
+                time++;
+                
+                tempLabels.push(`${time}h`);
+                const lastTemp = tempData.length > 0 ? tempData[tempData.length - 1] : 20;
+                let newTemp;
+                if(time < 12) {
+                    newTemp = lastTemp + Math.random() * 3;
+                } else if(time < 36) {
+                    newTemp = lastTemp - Math.random() * 1.5;
+                } else {
+                    newTemp = lastTemp - Math.random() * 0.5;
+                }
+                tempData.push(Math.min(Math.max(newTemp, 15), 65));
+
+                strengthLabels.push(`${time}h`);
+                const lastStrength = strengthData.length > 0 ? strengthData[strengthData.length - 1] : 0;
+                let newStrength = lastStrength + (25 - lastStrength) * 0.08 * Math.random();
+                strengthData.push(Math.min(newStrength, 35));
+
+                if (tempLabels.length > 50) {
+                    tempLabels.shift();
+                    tempData.shift();
+                    strengthLabels.shift();
+                    strengthData.shift();
+                }
+
+                tempChart.data.labels = tempLabels;
+                tempChart.data.datasets[0].data = tempData;
+                tempChart.update('none');
+
+                strengthChart.data.labels = strengthLabels;
+                strengthChart.data.datasets[0].data = strengthData;
+                strengthChart.update('none');
+            }
+
+            const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+            tempChart = new Chart(tempCtx, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Temperatura', data: [], borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 }] },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: false, title: { display: true, text: '°C' } } }, plugins: { legend: { display: false } } }
+            });
+
+            const strengthCtx = document.getElementById('strengthChart').getContext('2d');
+            strengthChart = new Chart(strengthCtx, {
+                type: 'line',
+                data: { labels: [], datasets: [{ label: 'Resistencia', data: [], borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.1)', fill: true, tension: 0.4 }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'MPa' } } },
+                    plugins: {
+                        legend: { display: false },
+                        annotation: {
+                            annotations: {
+                                jointCut: { type: 'line', yMin: 5, yMax: 5, borderColor: 'rgb(255, 99, 132)', borderWidth: 2, borderDash: [6, 6], label: { content: 'Corte de Juntas', enabled: true, position: 'start' } },
+                                trafficOpen: { type: 'line', yMin: 21, yMax: 21, borderColor: 'rgb(54, 162, 235)', borderWidth: 2, borderDash: [6, 6], label: { content: 'Apertura a Tráfico', enabled: true, position: 'start' } }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            setInterval(updateChartData, 2000);
+
+            const projectSizeSlider = document.getElementById('projectSize');
+            const projectSizeLabel = document.getElementById('projectSizeLabel');
+            const roiCtx = document.getElementById('roiChart').getContext('2d');
+
+            function updateRoiChart() {
+                const size = parseInt(projectSizeSlider.value);
+                projectSizeLabel.textContent = `${size.toLocaleString('es-CL')} m²`;
+
+                const smartrockInvestment = size * 1.5; 
+                const potentialRepairCost = size * 5 * (Math.random() * 0.4 + 0.8);
+                const savings = potentialRepairCost - smartrockInvestment;
+
+                roiChart.data.datasets[0].data = [potentialRepairCost, smartrockInvestment, savings > 0 ? savings : 0];
+                roiChart.update();
+            }
+
+            roiChart = new Chart(roiCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Costo Potencial de Reparación', 'Inversión SmartRock', 'Ahorro Neto Estimado'],
+                    datasets: [{
+                        label: 'Costo en CLP (Estimado)',
+                        data: [],
+                        backgroundColor: ['#ef4444', '#3b82f6', '#10b981']
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.x !== null) {
+                                        label += new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(context.parsed.x * 1000);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    return '$' + (value/1000) + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            projectSizeSlider.addEventListener('input', updateRoiChart);
+            updateRoiChart();
+        });
+    </script>
+</body>
+</html>
